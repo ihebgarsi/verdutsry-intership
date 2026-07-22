@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "ESG Platform",
-  description: "AI platform for ESG analysis and prediction",
+  description: "ESG analysis and decision platform",
 };
 
 export default function RootLayout({

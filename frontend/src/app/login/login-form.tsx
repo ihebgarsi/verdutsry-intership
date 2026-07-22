@@ -37,14 +37,17 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 to-white px-4">
-      <div className="w-full max-w-md rounded-xl border border-emerald-100 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-emerald-900">ESG Platform</h1>
-        <p className="mt-1 text-sm text-gray-600">Sign in to your account</p>
+    <div className="flex min-h-screen items-center justify-center bg-[#eef5f1] px-4">
+      <div className="w-full max-w-md rounded-2xl border border-emerald-200 bg-white p-8 shadow-md">
+        <p className="text-sm font-semibold uppercase tracking-wide text-emerald-800">
+          Verdustry
+        </p>
+        <h1 className="mt-1 text-2xl font-bold text-slate-900">ESG Platform</h1>
+        <p className="mt-1 text-sm text-slate-700">Sign in to your account</p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="email" className="block text-sm font-semibold text-slate-800">
               Email
             </label>
             <input
@@ -52,12 +55,12 @@ export default function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="input mt-1"
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="password" className="block text-sm font-semibold text-slate-800">
               Password
             </label>
             <input
@@ -65,27 +68,27 @@ export default function LoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="input mt-1"
               required
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm font-medium text-red-700">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-md bg-emerald-700 px-4 py-2.5 font-medium text-white hover:bg-emerald-800 disabled:opacity-60"
+            className="w-full rounded-md bg-emerald-700 px-4 py-2.5 font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
           >
             {loading ? "Signing in…" : "Sign in"}
           </button>
         </form>
 
-        <div className="mt-6 rounded-md bg-gray-50 p-3 text-xs text-gray-600">
-          <p className="font-medium text-gray-700">Demo accounts (mock):</p>
+        <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-800">
+          <p className="font-semibold text-slate-900">Test accounts</p>
           <ul className="mt-1 space-y-0.5">
-            <li>admin@esg.local / admin123 (Admin)</li>
-            <li>esg@esg.local / esg123 (ESG Manager)</li>
-            <li>exec@esg.local / exec123 (Executive)</li>
-            <li>audit@esg.local / audit123 (Auditor)</li>
+            <li>admin@esg.local / admin123 (Administrateur)</li>
+            <li>esg@esg.local / esg123 (Responsable ESG)</li>
+            <li>exec@esg.local / exec123 (Direction)</li>
+            <li>audit@esg.local / audit123 (Auditeur)</li>
           </ul>
         </div>
       </div>

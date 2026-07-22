@@ -9,18 +9,18 @@ export default function Navbar() {
   const role = session?.user?.role;
 
   return (
-    <header className="border-b border-emerald-100 bg-white">
+    <header className="border-b border-emerald-200 bg-white shadow-sm">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-lg font-semibold text-emerald-800">
+          <Link href="/dashboard" className="text-lg font-bold text-emerald-900">
             ESG Platform
           </Link>
-          <nav className="flex gap-4 text-sm">
-            <Link href="/dashboard" className="text-gray-700 hover:text-emerald-700">
+          <nav className="flex gap-4 text-sm font-medium">
+            <Link href="/dashboard" className="text-slate-800 hover:text-emerald-800">
               Dashboard
             </Link>
             {role === "ADMIN" && (
-              <Link href="/admin/users" className="text-gray-700 hover:text-emerald-700">
+              <Link href="/admin/users" className="text-slate-800 hover:text-emerald-800">
                 Users
               </Link>
             )}
@@ -28,16 +28,16 @@ export default function Navbar() {
         </div>
         {session?.user && (
           <div className="flex items-center gap-4 text-sm">
-            <span className="text-gray-600">
+            <span className="font-medium text-slate-800">
               {session.user.name}{" "}
-              <span className="rounded bg-emerald-50 px-2 py-0.5 text-emerald-800">
+              <span className="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-900">
                 {role ? ROLE_LABELS[role] : ""}
               </span>
             </span>
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="rounded-md border border-gray-300 px-3 py-1.5 hover:bg-gray-50"
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-800 hover:bg-slate-100"
             >
               Log out
             </button>

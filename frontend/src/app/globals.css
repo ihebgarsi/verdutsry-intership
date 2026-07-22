@@ -1,8 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f7f5;
+  --foreground: #0f1f1a;
+  --card: #ffffff;
+  --muted: #334155;
+  --border: #cbd5e1;
+  --brand: #047857;
+  --brand-dark: #065f46;
 }
 
 @theme inline {
@@ -12,21 +17,18 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
 .input {
-  @apply w-full rounded-md border border-gray-300 px-3 py-2 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500;
+  @apply w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-500 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600;
 }
 
 .btn-primary {
@@ -34,5 +36,5 @@ body {
 }
 
 .btn-secondary {
-  @apply rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50;
+  @apply rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-100;
 }

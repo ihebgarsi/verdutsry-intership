@@ -1,11 +1,11 @@
-# ESG Platform — Frontend (Sprint 1 Part B)
+# ESG Platform — Frontend
 
-Next.js + **NextAuth** (Auth.js v5) — login, JWT session, role-based routes, admin user CRUD.
+Next.js authentication UI: login, session, role-based routes, admin user management.
 
 ## Stack
 - Next.js 16 (App Router)
 - TypeScript + Tailwind CSS
-- NextAuth (Credentials → FastAPI or mock users)
+- NextAuth (Credentials → backend API or local demo accounts)
 
 ## Setup
 
@@ -19,14 +19,14 @@ npm run dev
 
 Open http://localhost:3000
 
-## Demo login (mock — works without backend)
+## Test accounts
 
 | Email | Password | Role |
 |---|---|---|
-| admin@esg.local | admin123 | Admin |
-| esg@esg.local | esg123 | ESG Manager |
-| exec@esg.local | exec123 | Executive |
-| audit@esg.local | audit123 | Auditor |
+| admin@esg.local | admin123 | Administrateur |
+| esg@esg.local | esg123 | Responsable ESG |
+| exec@esg.local | exec123 | Direction |
+| audit@esg.local | audit123 | Auditeur |
 
 ## Pages
 
@@ -34,17 +34,17 @@ Open http://localhost:3000
 |---|---|
 | `/login` | Public |
 | `/dashboard` | All authenticated roles |
-| `/admin/users` | **Admin only** — CRUD users |
+| `/admin/users` | **Admin only** — user CRUD |
 
-## Connect to FastAPI (Person A)
+## Connect to FastAPI
 
-When backend is ready, set in `.env.local`:
+In `.env.local`:
 
 ```
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-Login tries `POST /auth/login` first; falls back to mock users if API is down.
+Login calls `POST /auth/login` first; falls back to local test accounts if the API is unavailable.
 
 Expected API contract:
 
@@ -57,14 +57,14 @@ GET  /users       Authorization: Bearer <token>  (Admin)
 
 ```
 src/
-  auth.ts                 # NextAuth config
-  middleware.ts           # Route + role guards
+  auth.ts
+  middleware.ts
   app/
     login/
     dashboard/
     admin/users/
     api/auth/[...nextauth]/
-    api/users/            # Mock CRUD until FastAPI
+    api/users/
   lib/
     roles.ts
     mock-users.ts
@@ -73,10 +73,3 @@ src/
     layout/navbar.tsx
     admin/admin-users-client.tsx
 ```
-
-## Sprint 1 deliverable (Part B)
-
-- Login page with NextAuth
-- JWT session with role in token
-- Protected routes + Admin-only `/admin/users`
-- Basic admin CRUD UI (mock API, swap to FastAPI later)

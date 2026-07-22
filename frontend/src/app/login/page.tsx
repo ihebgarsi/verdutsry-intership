@@ -3,7 +3,7 @@ import { Suspense } from "react";
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="flex min-h-screen items-center justify-center">Loading…</div>}>
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-[#eef5f1] text-slate-800">Loading…</div>}>
       <LoginForm />
     </Suspense>
   );

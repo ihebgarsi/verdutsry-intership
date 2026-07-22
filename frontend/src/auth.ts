@@ -22,7 +22,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
-        // 1) Try FastAPI backend (Person A)
+        // Prefer backend authentication when available
         const apiResult = await loginWithApi(email, password);
         if (apiResult) {
           const role = apiResult.user.role;
@@ -36,7 +36,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           };
         }
 
-        // 2) Fallback: mock users for dev / demo
+        // Local demo accounts (offline fallback)
         const mock = findMockUser(email, password);
         if (!mock) return null;
         return {

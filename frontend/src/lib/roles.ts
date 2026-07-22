@@ -14,7 +14,7 @@ export const ROLE_LABELS: Record<Role, string> = {
   AUDITOR: "Auditeur",
 };
 
-/** Routes each role can access (Sprint 1 matrix) */
+/** Routes each role can access */
 export const ROLE_ROUTES: Record<Role, string[]> = {
   EXECUTIVE: ["/dashboard"],
   ESG_MANAGER: ["/dashboard"],
