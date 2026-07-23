@@ -78,9 +78,16 @@ class AuthService:
         self.db.add(user)
         self.db.commit()
         self.db.refresh(company)
-        self.db.refresh(user)
+
+        # Reload with role relationship (avoids lazy-load 500 after commit)
+        created = self.user_repository.get_by_id(user.id)
+        if not created:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Signup succeeded but user could not be loaded.",
+            )
 
         return SignupResponse(
             company=company_to_response(company),
-            user=user_to_auth_response(user),
+            user=user_to_auth_response(created),
         )
