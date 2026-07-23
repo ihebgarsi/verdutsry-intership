@@ -1,12 +1,13 @@
 /**
- * FastAPI backend client — single place for all HTTP calls.
- * Base URL: NEXT_PUBLIC_API_URL (default http://localhost:8000)
+ * FastAPI backend client — all calls go to NEXT_PUBLIC_API_URL + /api/v1
  */
 
 import type { Role } from "@/lib/roles";
 
 export const API_URL =
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+const API_PREFIX = "/api/v1";
 
 export class ApiError extends Error {
   status: number;
@@ -20,7 +21,10 @@ export class ApiError extends Error {
 
 async function parseError(res: Response): Promise<string> {
   try {
-    const data = (await res.json()) as { error?: string; detail?: string | unknown };
+    const data = (await res.json()) as {
+      error?: string;
+      detail?: string | unknown;
+    };
     if (typeof data.error === "string") return data.error;
     if (typeof data.detail === "string") return data.detail;
     if (Array.isArray(data.detail)) {
@@ -44,7 +48,7 @@ async function apiFetch<T>(
   options: RequestInit & { token?: string } = {},
 ): Promise<T> {
   const { token, headers, ...rest } = options;
-  const res = await fetch(`${API_URL}${path}`, {
+  const res = await fetch(`${API_URL}${API_PREFIX}${path}`, {
     ...rest,
     headers: {
       "Content-Type": "application/json",
@@ -61,7 +65,7 @@ async function apiFetch<T>(
   return (await res.json()) as T;
 }
 
-/* ---------- Types ---------- */
+/* ---------- Types (frontend shape) ---------- */
 
 export type ApiUser = {
   id: string;
@@ -74,11 +78,13 @@ export type ApiUser = {
 
 export type LoginResponse = {
   access_token: string;
+  token_type?: string;
   user: {
     id: string;
     email: string;
     name: string;
     role: string;
+    isActive?: boolean;
     companyId?: string;
   };
 };
@@ -125,7 +131,7 @@ export async function loginWithApi(
   email: string,
   password: string,
 ): Promise<LoginResponse> {
-  return apiFetch<LoginResponse>("/auth/login", {
+  return apiFetch<LoginResponse>("/auth/login/json", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
@@ -157,7 +163,13 @@ export async function createUserApi(
   return apiFetch<ApiUser>("/users", {
     method: "POST",
     token,
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      email: payload.email,
+      name: payload.name,
+      role: payload.role,
+      password: payload.password,
+      isActive: payload.isActive ?? true,
+    }),
   });
 }
 
@@ -169,15 +181,21 @@ export async function updateUserApi(
   return apiFetch<ApiUser>(`/users/${id}`, {
     method: "PUT",
     token,
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      ...(payload.email !== undefined ? { email: payload.email } : {}),
+      ...(payload.name !== undefined ? { name: payload.name } : {}),
+      ...(payload.role !== undefined ? { role: payload.role } : {}),
+      ...(payload.password ? { password: payload.password } : {}),
+      ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {}),
+    }),
   });
 }
 
 export async function deleteUserApi(
   token: string,
   id: string,
-): Promise<{ ok: boolean }> {
-  return apiFetch<{ ok: boolean }>(`/users/${id}`, {
+): Promise<void> {
+  await apiFetch<void>(`/users/${id}`, {
     method: "DELETE",
     token,
   });

@@ -1,10 +1,8 @@
 # ESG Platform — API Contract (Frontend ↔ FastAPI)
 
-**Backend:** `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`)  
-**Auth header:** `Authorization: Bearer <access_token>`  
-**Content-Type:** `application/json`
-
-
+**Backend base:** `NEXT_PUBLIC_API_URL` (default `http://localhost:8000`)  
+**API prefix:** `/api/v1`  
+**Auth header:** `Authorization: Bearer <access_token>`
 
 ## Roles (exact strings)
 
@@ -14,35 +12,32 @@
 
 ## Auth
 
-### `POST /auth/login`
-Public. Authenticate user.
+### `POST /api/v1/auth/login/json` (used by Next.js)
 
 **Body**
 ```json
-{ "email": "admin@company.com", "password": "secret" }
+{ "email": "admin@verdustry.com", "password": "admin123" }
 ```
 
 **200**
 ```json
 {
   "access_token": "eyJ...",
+  "token_type": "bearer",
   "user": {
-    "id": "uuid-or-string",
-    "email": "admin@company.com",
-    "name": "Admin User",
+    "id": "1",
+    "email": "admin@verdustry.com",
+    "name": "Administrator",
     "role": "ADMIN",
-    "companyId": "company-uuid"
+    "isActive": true,
+    "companyId": "1"
   }
 }
 ```
 
-**401** invalid credentials  
-**CORS** required for browser/NextAuth server calls
+Also available: `POST /api/v1/auth/login` (OAuth2 form, `username` + `password`) — same response shape.
 
----
-
-### `POST /auth/signup`
-Public. Create company + first user as `ADMIN`.
+### `POST /api/v1/auth/signup`
 
 **Body**
 ```json
@@ -56,64 +51,20 @@ Public. Create company + first user as `ADMIN`.
 }
 ```
 
-**201**
-```json
-{
-  "company": {
-    "id": "company-uuid",
-    "name": "GreenTech Tunisia",
-    "sector": "Manufacturing",
-    "country": "Tunisia",
-    "createdAt": "2026-07-23T10:00:00Z"
-  },
-  "user": {
-    "id": "user-uuid",
-    "email": "sara@greentech.tn",
-    "name": "Sara Ben Ali",
-    "role": "ADMIN",
-    "isActive": true,
-    "companyId": "company-uuid"
-  }
-}
-```
+**201** — `{ company, user }` (user role is always `ADMIN`)
 
-**400** validation error  
-**409** email already exists  
+### `GET /api/v1/auth/me`
+
+Bearer token → same `user` shape as login.
 
 ---
 
-### `GET /auth/me` (recommended)
-Authenticated. Current user from JWT.
+## Users (ADMIN; GET also allowed for EXECUTIVE)
 
-**200** — same shape as `user` in login response (+ `isActive`, `companyId`)
+### `GET /api/v1/users`
+List users (no passwords).
 
----
-
-## Users (ADMIN only)
-
-All require `Authorization: Bearer <token>`.
-
-### `GET /users`
-List users for the admin’s company (no passwords).
-
-**200**
-```json
-[
-  {
-    "id": "...",
-    "email": "...",
-    "name": "...",
-    "role": "ESG_MANAGER",
-    "isActive": true,
-    "companyId": "..."
-  }
-]
-```
-
-### `POST /users`
-Create user in the same company.
-
-**Body**
+### `POST /api/v1/users`
 ```json
 {
   "email": "new@company.com",
@@ -123,50 +74,13 @@ Create user in the same company.
   "isActive": true
 }
 ```
+Also accepts legacy: `full_name`, `role_id`, `is_active`.
 
-**201** created user (no password)
+### `PUT /api/v1/users/{id}`
+Optional fields: `email`, `name`/`full_name`, `role`/`role_id`, `isActive`/`is_active`, `password`.
 
-### `PUT /users/{id}`
-Update user. All fields optional.
-
-**Body**
-```json
-{
-  "email": "...",
-  "name": "...",
-  "role": "AUDITOR",
-  "password": "optional-new-password",
-  "isActive": false
-}
-```
-
-**200** updated user
-
-### `DELETE /users/{id}`
-**200** `{ "ok": true }`
-
----
-
-## Errors
-
-Prefer:
-```json
-{ "error": "Human readable message" }
-```
-
-FastAPI `detail` (string or validation array) is also accepted by the frontend.
-
----
-
-## Backend checklist
-
-- [ ] PostgreSQL tables: `companies`, `users` (with `company_id`, hashed password, role)
-- [ ] `POST /auth/login` (JWT)
-- [ ] `POST /auth/signup`
-- [ ] `GET/POST/PUT/DELETE /users` (ADMIN)
-- [ ] CORS: `http://localhost:3000`
-- [ ] Roles match exact strings above
-- [ ] Never return password hashes in JSON
+### `DELETE /api/v1/users/{id}`
+**204** No Content
 
 ---
 
@@ -178,4 +92,8 @@ AUTH_SECRET=...
 AUTH_URL=http://localhost:3000
 ```
 
-Client code lives in `src/lib/api.ts`.
+Client: [`src/lib/api.ts`](./src/lib/api.ts) — all paths under `/api/v1`.
+
+## Seed account
+
+`admin@verdustry.com` / `admin123`
