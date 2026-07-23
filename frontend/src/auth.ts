@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { loginWithApi } from "@/lib/api";
-import { findMockUser } from "@/lib/mock-users";
+import { ApiError, loginWithApi } from "@/lib/api";
 import type { Role } from "@/lib/roles";
 import { ROLES } from "@/lib/roles";
 
@@ -22,30 +21,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const password = credentials?.password as string | undefined;
         if (!email || !password) return null;
 
-        // Prefer backend authentication when available
-        const apiResult = await loginWithApi(email, password);
-        if (apiResult) {
+        try {
+          const apiResult = await loginWithApi(email, password);
           const role = apiResult.user.role;
           if (!isRole(role)) return null;
+
           return {
-            id: apiResult.user.id,
+            id: String(apiResult.user.id),
             email: apiResult.user.email,
             name: apiResult.user.name,
             role,
+            companyId: apiResult.user.companyId,
             accessToken: apiResult.access_token,
           };
+        } catch (error) {
+          if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+            return null;
+          }
+          // Backend down / network — surface as failed login
+          return null;
         }
-
-        // Local demo accounts (offline fallback)
-        const mock = findMockUser(email, password);
-        if (!mock) return null;
-        return {
-          id: mock.id,
-          email: mock.email,
-          name: mock.name,
-          role: mock.role,
-          accessToken: "mock-token",
-        };
       },
     }),
   ],
@@ -58,6 +53,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.id = user.id!;
         token.role = user.role;
+        token.companyId = user.companyId;
         token.accessToken = user.accessToken;
       }
       return token;
@@ -66,6 +62,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as Role;
+        session.user.companyId = token.companyId as string | undefined;
       }
       session.accessToken = token.accessToken as string | undefined;
       return session;

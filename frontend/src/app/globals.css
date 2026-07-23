@@ -36,5 +36,5 @@ body {
 }
 
 .btn-secondary {
-  @apply rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-100;
+  @apply rounded-md border border-slate-300 bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-slate-300;
 }

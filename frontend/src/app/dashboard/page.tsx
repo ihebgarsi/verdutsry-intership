@@ -19,7 +19,7 @@ export default async function DashboardPage() {
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card title="Role" value={ROLE_LABELS[user.role]} />
         <Card title="Email" value={user.email ?? ""} />
-        <Card title="Status" value="Connected" />
+        <Card title="Company ID" value={user.companyId ?? "—"} />
       </div>
 
       <section className="mt-8 rounded-lg border border-emerald-200 bg-white p-6 shadow-sm">

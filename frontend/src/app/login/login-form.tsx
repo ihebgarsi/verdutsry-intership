@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useState } from "react";
 
@@ -9,8 +10,8 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
-  const [email, setEmail] = useState("admin@esg.local");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -28,7 +29,9 @@ export default function LoginForm() {
     setLoading(false);
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError(
+        "Invalid email or password, or the backend is unreachable. Check FastAPI is running.",
+      );
       return;
     }
 
@@ -56,6 +59,7 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input mt-1"
+              autoComplete="email"
               required
             />
           </div>
@@ -69,6 +73,7 @@ export default function LoginForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="input mt-1"
+              autoComplete="current-password"
               required
             />
           </div>
@@ -82,15 +87,12 @@ export default function LoginForm() {
           </button>
         </form>
 
-        <div className="mt-6 rounded-md border border-slate-200 bg-slate-50 p-3 text-xs text-slate-800">
-          <p className="font-semibold text-slate-900">Test accounts</p>
-          <ul className="mt-1 space-y-0.5">
-            <li>admin@esg.local / admin123 (Administrateur)</li>
-            <li>esg@esg.local / esg123 (Responsable ESG)</li>
-            <li>exec@esg.local / exec123 (Direction)</li>
-            <li>audit@esg.local / audit123 (Auditeur)</li>
-          </ul>
-        </div>
+        <p className="mt-4 text-center text-sm text-slate-800">
+          New company?{" "}
+          <Link href="/signup" className="font-semibold text-emerald-800 hover:underline">
+            Create an account
+          </Link>
+        </p>
       </div>
     </div>
   );

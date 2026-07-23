@@ -37,7 +37,7 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-800 hover:bg-slate-100"
+              className="rounded-md bg-slate-800 px-3 py-1.5 font-semibold text-white hover:bg-slate-900"
             >
               Log out
             </button>

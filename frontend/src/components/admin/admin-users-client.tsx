@@ -1,15 +1,16 @@
 "use client";
 
+import {
+  ApiError,
+  createUserApi,
+  deleteUserApi,
+  fetchUsers,
+  updateUserApi,
+  type ApiUser,
+} from "@/lib/api";
 import { ROLE_LABELS, ROLES, type Role } from "@/lib/roles";
+import { useSession } from "next-auth/react";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-
-type UserRow = {
-  id: string;
-  email: string;
-  name: string;
-  role: Role;
-  isActive: boolean;
-};
 
 const emptyForm = {
   email: "",
@@ -20,24 +21,36 @@ const emptyForm = {
 };
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<UserRow[]>([]);
+  const { data: session } = useSession();
+  const token = session?.accessToken;
+
+  const [users, setUsers] = useState<ApiUser[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
   const loadUsers = useCallback(async () => {
+    if (!token) {
+      setError("Missing access token. Please sign in again.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
+    setError("");
     try {
-      const res = await fetch("/api/users");
-      if (!res.ok) throw new Error("Failed to load");
-      setUsers(await res.json());
-    } catch {
-      setError("Could not load users");
+      setUsers(await fetchUsers(token));
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : "Could not load users from the backend.",
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     loadUsers();
@@ -45,47 +58,68 @@ export default function AdminUsersPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!token) return;
     setError("");
 
-    const url = editingId ? `/api/users/${editingId}` : "/api/users";
-    const method = editingId ? "PUT" : "POST";
-    const body = editingId
-      ? { email: form.email, name: form.name, role: form.role, isActive: form.isActive, ...(form.password ? { password: form.password } : {}) }
-      : form;
+    try {
+      if (editingId) {
+        await updateUserApi(token, editingId, {
+          email: form.email,
+          name: form.name,
+          role: form.role,
+          isActive: form.isActive,
+          ...(form.password ? { password: form.password } : {}),
+        });
+      } else {
+        await createUserApi(token, {
+          email: form.email,
+          name: form.name,
+          role: form.role,
+          password: form.password,
+          isActive: form.isActive,
+        });
+      }
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-
-    if (!res.ok) {
-      setError("Save failed");
-      return;
+      setForm(emptyForm);
+      setEditingId(null);
+      await loadUsers();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Save failed");
     }
-
-    setForm(emptyForm);
-    setEditingId(null);
-    await loadUsers();
   }
 
-  function startEdit(user: UserRow) {
+  function startEdit(user: ApiUser) {
     setEditingId(user.id);
-    setForm({ email: user.email, name: user.name, role: user.role, password: "", isActive: user.isActive });
+    setForm({
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      password: "",
+      isActive: user.isActive,
+    });
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Delete this user?")) return;
-    await fetch(`/api/users/${id}`, { method: "DELETE" });
-    await loadUsers();
+    if (!token || !confirm("Delete this user?")) return;
+    try {
+      await deleteUserApi(token, id);
+      await loadUsers();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "Delete failed");
+    }
   }
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-900">User management</h1>
-      <p className="mt-1 text-sm text-slate-700">Create, update, and manage platform accounts by role.</p>
+      <p className="mt-1 text-sm text-slate-700">
+        Create, update, and manage platform accounts by role.
+      </p>
 
-      <form onSubmit={handleSubmit} className="mt-6 grid gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-2">
+      <form
+        onSubmit={handleSubmit}
+        className="mt-6 grid gap-4 rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:grid-cols-2"
+      >
         <Field label="Email">
           <input
             type="email"
@@ -125,7 +159,7 @@ export default function AdminUsersPage() {
             required={!editingId}
           />
         </Field>
-        <label className="flex items-center gap-2 text-sm sm:col-span-2">
+        <label className="flex items-center gap-2 text-sm text-slate-800 sm:col-span-2">
           <input
             type="checkbox"
             checked={form.isActive}
@@ -150,7 +184,7 @@ export default function AdminUsersPage() {
             </button>
           )}
         </div>
-        {error && <p className="text-sm text-red-600 sm:col-span-2">{error}</p>}
+        {error && <p className="text-sm font-medium text-red-700 sm:col-span-2">{error}</p>}
       </form>
 
       <div className="mt-8 overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -171,6 +205,12 @@ export default function AdminUsersPage() {
                   Loading…
                 </td>
               </tr>
+            ) : users.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-6 font-medium text-slate-700">
+                  No users found.
+                </td>
+              </tr>
             ) : (
               users.map((u) => (
                 <tr key={u.id} className="border-b border-slate-200 last:border-0">
@@ -179,12 +219,22 @@ export default function AdminUsersPage() {
                   <td className="px-4 py-3">{ROLE_LABELS[u.role]}</td>
                   <td className="px-4 py-3">{u.isActive ? "Active" : "Inactive"}</td>
                   <td className="px-4 py-3">
-                    <button type="button" className="mr-2 font-semibold text-emerald-800 hover:underline" onClick={() => startEdit(u)}>
-                      Edit
-                    </button>
-                    <button type="button" className="font-semibold text-red-700 hover:underline" onClick={() => handleDelete(u.id)}>
-                      Delete
-                    </button>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        type="button"
+                        className="rounded-md bg-emerald-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-800"
+                        onClick={() => startEdit(u)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-md bg-red-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-800"
+                        onClick={() => handleDelete(u.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

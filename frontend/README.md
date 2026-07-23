@@ -1,11 +1,12 @@
-# ESG Platform — Frontend
+# ESG Platform — Frontend (FastAPI ready)
 
-Next.js authentication UI: login, session, role-based routes, admin user management.
+Next.js UI connected to a **FastAPI + PostgreSQL** backend.  
+No mock users / in-memory store.
 
 ## Stack
-- Next.js 16 (App Router)
-- TypeScript + Tailwind CSS
-- NextAuth (Credentials → backend API or local demo accounts)
+- Next.js 16 (App Router) + TypeScript + Tailwind
+- NextAuth (Credentials → FastAPI JWT)
+- All business data from FastAPI
 
 ## Setup
 
@@ -13,63 +14,64 @@ Next.js authentication UI: login, session, role-based routes, admin user managem
 cd frontend
 npm install
 copy .env.example .env.local
-# Edit AUTH_SECRET in .env.local (random string, 32+ chars)
+```
+
+Edit `.env.local`:
+
+```env
+AUTH_SECRET=<random-32+-chars>
+NEXT_PUBLIC_API_URL=http://localhost:8000
+AUTH_URL=http://localhost:3000
+```
+
+Start backend first, then:
+
+```powershell
 npm run dev
 ```
 
 Open http://localhost:3000
 
-## Test accounts
+## Required backend (must be running)
 
-| Email | Password | Role |
-|---|---|---|
-| admin@esg.local | admin123 | Administrateur |
-| esg@esg.local | esg123 | Responsable ESG |
-| exec@esg.local | exec123 | Direction |
-| audit@esg.local | audit123 | Auditeur |
+| Method | Endpoint |
+|---|---|
+| POST | `/auth/login` |
+| POST | `/auth/signup` |
+| GET | `/users` |
+| POST | `/users` |
+| PUT | `/users/{id}` |
+| DELETE | `/users/{id}` |
+
+Full contract: see [`API_CONTRACT.md`](./API_CONTRACT.md)
+
+CORS must allow `http://localhost:3000`.
 
 ## Pages
 
 | Route | Who |
 |---|---|
 | `/login` | Public |
-| `/dashboard` | All authenticated roles |
-| `/admin/users` | **Admin only** — user CRUD |
+| `/signup` | Public — company + admin registration |
+| `/dashboard` | Authenticated |
+| `/admin/users` | ADMIN only |
 
-## Connect to FastAPI
-
-In `.env.local`:
-
-```
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-Login calls `POST /auth/login` first; falls back to local test accounts if the API is unavailable.
-
-Expected API contract:
-
-```
-POST /auth/login  { email, password } → { access_token, user: { id, email, name, role } }
-GET  /users       Authorization: Bearer <token>  (Admin)
-```
-
-## Project structure
+## Project structure (integration-focused)
 
 ```
 src/
-  auth.ts
-  middleware.ts
-  app/
-    login/
-    dashboard/
-    admin/users/
-    api/auth/[...nextauth]/
-    api/users/
-  lib/
-    roles.ts
-    mock-users.ts
-    api.ts
-  components/
-    layout/navbar.tsx
-    admin/admin-users-client.tsx
+  lib/api.ts          ← ALL FastAPI calls (single client)
+  auth.ts             ← NextAuth → POST /auth/login
+  app/login/          ← Sign in UI
+  app/signup/         ← Company signup UI
+  app/dashboard/      ← Authenticated home
+  app/admin/users/    ← User CRUD via /users
+  app/api/auth/       ← NextAuth handlers only
 ```
+
+## How auth works
+
+1. Login/signup call FastAPI
+2. Backend returns `access_token` + user
+3. NextAuth stores token in the session JWT
+4. Admin pages call FastAPI with `Authorization: Bearer <token>`
