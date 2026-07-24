@@ -7,6 +7,13 @@ export const ROLES = [
 
 export type Role = (typeof ROLES)[number];
 
+/** Roles an admin can assign to company users */
+export const COMPANY_USER_ROLES: Role[] = [
+  "EXECUTIVE",
+  "ESG_MANAGER",
+  "AUDITOR",
+];
+
 export const ROLE_LABELS: Record<Role, string> = {
   EXECUTIVE: "Direction",
   ESG_MANAGER: "Responsable ESG",
@@ -18,7 +25,7 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_ROUTES: Record<Role, string[]> = {
   EXECUTIVE: ["/dashboard"],
   ESG_MANAGER: ["/dashboard"],
-  ADMIN: ["/dashboard", "/admin/users"],
+  ADMIN: ["/dashboard", "/admin/users", "/admin/companies"],
   AUDITOR: ["/dashboard"],
 };
 

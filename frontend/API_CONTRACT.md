@@ -4,65 +4,63 @@
 **API prefix:** `/api/v1`  
 **Auth header:** `Authorization: Bearer <access_token>`
 
+## Product model
+
+- **Platform ADMIN** creates **companies** and **company users**, and assigns roles.
+- There is **no public self-signup**. Accounts exist only after an admin creates them.
+- Google login only works for **existing** emails.
+
 ## Roles (exact strings)
 
-`EXECUTIVE` | `ESG_MANAGER` | `ADMIN` | `AUDITOR`
+| Role | Who |
+|---|---|
+| `ADMIN` | Platform administrator |
+| `ESG_MANAGER` | Company user |
+| `EXECUTIVE` | Company user |
+| `AUDITOR` | Company user |
 
 ---
 
 ## Auth
 
-### `POST /api/v1/auth/login/json` (used by Next.js)
+### `POST /api/v1/auth/login/json`
 
-**Body**
 ```json
 { "email": "admin@verdustry.com", "password": "admin123" }
 ```
 
-**200**
+**200** — `{ access_token, token_type, user }`
+
+### `POST /api/v1/auth/google`
+
 ```json
-{
-  "access_token": "eyJ...",
-  "token_type": "bearer",
-  "user": {
-    "id": "1",
-    "email": "admin@verdustry.com",
-    "name": "Administrator",
-    "role": "ADMIN",
-    "isActive": true,
-    "companyId": "1"
-  }
-}
+{ "id_token": "<Google ID token>" }
 ```
 
-Also available: `POST /api/v1/auth/login` (OAuth2 form, `username` + `password`) — same response shape.
-
-### `POST /api/v1/auth/signup`
-
-**Body**
-```json
-{
-  "companyName": "GreenTech Tunisia",
-  "sector": "Manufacturing",
-  "country": "Tunisia",
-  "adminName": "Sara Ben Ali",
-  "email": "sara@greentech.tn",
-  "password": "secret123"
-}
-```
-
-**201** — `{ company, user }` (user role is always `ADMIN`)
+**200** — same as login. **404** if email is not already registered.
 
 ### `GET /api/v1/auth/me`
 
-Bearer token → same `user` shape as login.
+Bearer → current `user`.
 
 ---
 
-## Users (ADMIN; GET also allowed for EXECUTIVE)
+## Companies (ADMIN only)
 
-### `GET /api/v1/users`
-List users (no passwords).
+### `GET /api/v1/companies`
+### `POST /api/v1/companies`
+```json
+{ "name": "GreenTech", "sector": "Manufacturing", "country": "Tunisia" }
+```
+### `PUT /api/v1/companies/{id}`
+### `DELETE /api/v1/companies/{id}` — **204** (blocked with **409** if company still has users)
+
+---
+
+## Users (ADMIN only)
+
+### `GET /api/v1/users?companyId=`
+Optional filter by company.
 
 ### `POST /api/v1/users`
 ```json
@@ -71,16 +69,16 @@ List users (no passwords).
   "name": "New User",
   "role": "ESG_MANAGER",
   "password": "password123",
+  "companyId": "1",
   "isActive": true
 }
 ```
-Also accepts legacy: `full_name`, `role_id`, `is_active`.
+`companyId` is **required**.
 
 ### `PUT /api/v1/users/{id}`
-Optional fields: `email`, `name`/`full_name`, `role`/`role_id`, `isActive`/`is_active`, `password`.
+Optional: `email`, `name`, `role`, `password`, `isActive`, `companyId`.
 
-### `DELETE /api/v1/users/{id}`
-**204** No Content
+### `DELETE /api/v1/users/{id}` — **204**
 
 ---
 
@@ -90,10 +88,10 @@ Optional fields: `email`, `name`/`full_name`, `role`/`role_id`, `isActive`/`is_a
 NEXT_PUBLIC_API_URL=http://localhost:8000
 AUTH_SECRET=...
 AUTH_URL=http://localhost:3000
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
 ```
-
-Client: [`src/lib/api.ts`](./src/lib/api.ts) — all paths under `/api/v1`.
 
 ## Seed account
 
-`admin@verdustry.com` / `admin123`
+`admin@verdustry.com` / `admin123` (platform ADMIN)

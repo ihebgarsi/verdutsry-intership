@@ -22,7 +22,7 @@ def test_login_json_success(client):
     assert data["user"]["role"] == "ADMIN"
 
 
-def test_signup_success(client):
+def test_public_signup_removed(client):
     response = client.post(
         "/api/v1/auth/signup",
         json={
@@ -34,11 +34,7 @@ def test_signup_success(client):
             "password": "secret123",
         },
     )
-    assert response.status_code == 201
-    data = response.json()
-    assert data["company"]["name"] == "GreenTech"
-    assert data["user"]["email"] == "sara@greentech.tn"
-    assert data["user"]["role"] == "ADMIN"
+    assert response.status_code == 404
 
 
 def test_login_wrong_password(client):
@@ -79,3 +75,47 @@ def test_get_me_with_invalid_token(client):
         headers={"Authorization": "Bearer invalid.token.here"},
     )
     assert response.status_code == 401
+
+
+def test_google_login_unknown_email_rejected(client, monkeypatch):
+    def fake_verify(_token: str):
+        return {
+            "email": "google.user@example.com",
+            "email_verified": True,
+            "name": "Google User",
+            "sub": "google-sub-1",
+        }
+
+    monkeypatch.setattr(
+        "app.services.auth_service.verify_google_id_token",
+        fake_verify,
+    )
+
+    response = client.post(
+        "/api/v1/auth/google",
+        json={"id_token": "fake.google.id.token.value"},
+    )
+    assert response.status_code == 404
+    assert "No account found" in response.json()["detail"]
+
+
+def test_google_login_existing_user(client, monkeypatch):
+    def fake_verify(_token: str):
+        return {
+            "email": "admin@verdustry.com",
+            "email_verified": True,
+            "name": "Administrator",
+            "sub": "google-sub-admin",
+        }
+
+    monkeypatch.setattr(
+        "app.services.auth_service.verify_google_id_token",
+        fake_verify,
+    )
+
+    response = client.post(
+        "/api/v1/auth/google",
+        json={"id_token": "fake.google.id.token.value"},
+    )
+    assert response.status_code == 200
+    assert response.json()["user"]["email"] == "admin@verdustry.com"

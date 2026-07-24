@@ -1,6 +1,6 @@
 # ESG Platform — Frontend (FastAPI ready)
 
-Next.js UI connected to **Verdustry FastAPI** (`/api/v1`) + PostgreSQL.
+Next.js UI for the **platform admin** model: admins create companies and company users.
 
 ## Setup
 
@@ -14,33 +14,31 @@ copy .env.example .env.local
 AUTH_SECRET=<random-32+-chars>
 NEXT_PUBLIC_API_URL=http://localhost:8000
 AUTH_URL=http://localhost:3000
+AUTH_GOOGLE_ID=<optional Google OAuth client id>
+AUTH_GOOGLE_SECRET=<optional Google OAuth secret>
 ```
 
-Start backend first (`verdustry-backend-main`), then:
+Backend `.env` must set the same client ID as `GOOGLE_CLIENT_ID` for Google login.
 
 ```powershell
 npm run dev
 ```
 
-## Backend must expose
+## Admin flow
+
+1. Sign in as platform ADMIN (`admin@verdustry.com` / `admin123` after seed)
+2. **Companies** → create companies
+3. **Users** → create users for a company and assign role (`ESG_MANAGER`, `EXECUTIVE`, `AUDITOR`)
+
+No public signup. Google login only if the email already exists.
+
+## Backend endpoints used
 
 | Method | Path |
 |---|---|
 | POST | `/api/v1/auth/login/json` |
-| POST | `/api/v1/auth/signup` |
-| GET | `/api/v1/auth/me` |
+| POST | `/api/v1/auth/google` |
+| GET/POST/PUT/DELETE | `/api/v1/companies` |
 | GET/POST/PUT/DELETE | `/api/v1/users` |
 
 See [`API_CONTRACT.md`](./API_CONTRACT.md).
-
-## Test login (after seed)
-
-`admin@verdustry.com` / `admin123`
-
-## Structure
-
-```
-src/lib/api.ts   ← all FastAPI calls (/api/v1)
-src/auth.ts      ← NextAuth → login/json
-app/login|signup|dashboard|admin/users
-```

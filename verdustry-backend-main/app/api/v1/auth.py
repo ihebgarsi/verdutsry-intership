@@ -6,12 +6,11 @@ from app.api.deps import get_db
 from app.core.security import get_current_user
 from app.services.auth_service import AuthService
 from app.schemas.auth import (
+    AuthUserResponse,
+    GoogleLoginRequest,
     LoginRequest,
     LoginResponse,
-    SignupRequest,
-    SignupResponse,
     user_to_auth_response,
-    AuthUserResponse,
 )
 from app.models.user import User
 
@@ -52,13 +51,14 @@ def login_json(
     return auth_service.build_login_response(user)
 
 
-@router.post("/signup", response_model=SignupResponse, status_code=201)
-def signup(
-    body: SignupRequest,
+@router.post("/google", response_model=LoginResponse)
+def login_google(
+    body: GoogleLoginRequest,
     db: Session = Depends(get_db),
 ):
+    """Exchange a Google ID token for an API access token + user."""
     auth_service = AuthService(db)
-    return auth_service.signup(body)
+    return auth_service.login_with_google(body.id_token)
 
 
 @router.get("/me", response_model=AuthUserResponse)

@@ -37,6 +37,7 @@ CORS allows `http://localhost:3000`.
 |---|---|---|
 | POST | `/api/v1/auth/login` | OAuth2 form (`username`=email) |
 | POST | `/api/v1/auth/login/json` | JSON `{ email, password }` + `user` in response |
-| POST | `/api/v1/auth/signup` | Company + ADMIN user |
+| POST | `/api/v1/auth/google` | Google ID token → API JWT (existing users only) |
+| GET/POST/PUT/DELETE | `/api/v1/companies` | Platform admin company CRUD |
+| GET/POST/PUT/DELETE | `/api/v1/users` | Platform admin user CRUD (`companyId` required on create) |
 | GET | `/api/v1/auth/me` | Current user |
-| GET/POST/PUT/DELETE | `/api/v1/users` | Admin user CRUD |

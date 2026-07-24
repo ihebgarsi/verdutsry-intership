@@ -9,13 +9,16 @@ export default auth((req) => {
 
   const isPublic =
     pathname === "/login" ||
-    pathname === "/signup" ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/_next") ||
     pathname === "/favicon.ico";
 
+  if (pathname === "/signup") {
+    return NextResponse.redirect(new URL("/login", req.url));
+  }
+
   if (isPublic) {
-    if (isLoggedIn && (pathname === "/login" || pathname === "/signup")) {
+    if (isLoggedIn && pathname === "/login") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.next();

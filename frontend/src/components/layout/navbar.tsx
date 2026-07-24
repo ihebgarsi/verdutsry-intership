@@ -20,20 +20,38 @@ export default function Navbar() {
               Dashboard
             </Link>
             {role === "ADMIN" && (
-              <Link href="/admin/users" className="text-slate-800 hover:text-emerald-800">
-                Users
-              </Link>
+              <>
+                <Link
+                  href="/admin/companies"
+                  className="text-slate-800 hover:text-emerald-800"
+                >
+                  Companies
+                </Link>
+                <Link
+                  href="/admin/users"
+                  className="text-slate-800 hover:text-emerald-800"
+                >
+                  Users
+                </Link>
+              </>
             )}
           </nav>
         </div>
         {session?.user && (
           <div className="flex items-center gap-4 text-sm">
-            <span className="font-medium text-slate-800">
-              {session.user.name}{" "}
-              <span className="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-900">
-                {role ? ROLE_LABELS[role] : ""}
-              </span>
-            </span>
+            <div className="text-right">
+              <p className="font-medium text-slate-800">
+                {session.user.name}{" "}
+                <span className="rounded bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-900">
+                  {role ? ROLE_LABELS[role] : ""}
+                </span>
+              </p>
+              {session.user.companyName && (
+                <p className="mt-0.5 text-xs font-medium text-slate-600">
+                  {session.user.companyName}
+                </p>
+              )}
+            </div>
             <button
               type="button"
               onClick={() => signOut({ callbackUrl: "/login" })}

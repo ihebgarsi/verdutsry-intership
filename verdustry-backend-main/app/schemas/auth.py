@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, ConfigDict, Field, model_validator
-from typing import Optional, Any
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
 class AuthUserResponse(BaseModel):
@@ -13,11 +14,16 @@ class AuthUserResponse(BaseModel):
     role: str
     isActive: bool
     companyId: Optional[str] = None
+    companyName: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+
+class GoogleLoginRequest(BaseModel):
+    id_token: str = Field(min_length=20)
 
 
 class LoginResponse(BaseModel):
@@ -26,31 +32,10 @@ class LoginResponse(BaseModel):
     user: AuthUserResponse
 
 
-class SignupRequest(BaseModel):
-    companyName: str = Field(min_length=1)
-    sector: str = Field(min_length=1)
-    country: str = Field(min_length=1)
-    adminName: str = Field(min_length=1)
-    email: EmailStr
-    password: str = Field(min_length=6)
-
-
-class CompanyResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: str
-    name: str
-    sector: str
-    country: str
-    createdAt: Optional[str] = None
-
-
-class SignupResponse(BaseModel):
-    company: CompanyResponse
-    user: AuthUserResponse
-
-
 def user_to_auth_response(user: Any) -> AuthUserResponse:
+    company_name = None
+    if getattr(user, "company", None) is not None:
+        company_name = user.company.name
     return AuthUserResponse(
         id=str(user.id),
         email=user.email,
@@ -58,17 +43,5 @@ def user_to_auth_response(user: Any) -> AuthUserResponse:
         role=user.role.name if user.role else "",
         isActive=bool(user.is_active),
         companyId=str(user.company_id) if user.company_id is not None else None,
-    )
-
-
-def company_to_response(company: Any) -> CompanyResponse:
-    created = None
-    if getattr(company, "created_at", None) is not None:
-        created = company.created_at.isoformat()
-    return CompanyResponse(
-        id=str(company.id),
-        name=company.name,
-        sector=company.sector,
-        country=company.country,
-        createdAt=created,
+        companyName=company_name,
     )

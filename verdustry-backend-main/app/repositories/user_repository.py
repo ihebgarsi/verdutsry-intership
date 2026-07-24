@@ -11,7 +11,7 @@ class UserRepository:
     def get_by_id(self, user_id: int) -> Optional[User]:
         return (
             self.db.query(User)
-            .options(joinedload(User.role))
+            .options(joinedload(User.role), joinedload(User.company))
             .filter(User.id == user_id)
             .first()
         )
@@ -19,13 +19,17 @@ class UserRepository:
     def get_by_email(self, email: str) -> Optional[User]:
         return (
             self.db.query(User)
-            .options(joinedload(User.role))
+            .options(joinedload(User.role), joinedload(User.company))
             .filter(User.email == email)
             .first()
         )
 
     def get_all(self) -> List[User]:
-        return self.db.query(User).options(joinedload(User.role)).all()
+        return (
+            self.db.query(User)
+            .options(joinedload(User.role), joinedload(User.company))
+            .all()
+        )
 
     def create(self, user: User) -> User:
         self.db.add(user)

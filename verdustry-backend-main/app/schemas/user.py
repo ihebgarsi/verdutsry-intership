@@ -11,6 +11,8 @@ class UserCreate(BaseModel):
     role: Optional[str] = None
     is_active: Optional[bool] = True
     isActive: Optional[bool] = None
+    company_id: Optional[int] = None
+    companyId: Optional[str] = None
 
     @model_validator(mode="after")
     def normalize(self):
@@ -18,8 +20,12 @@ class UserCreate(BaseModel):
             self.full_name = self.name
         if self.isActive is not None:
             self.is_active = self.isActive
+        if self.companyId and self.company_id is None:
+            self.company_id = int(self.companyId)
         if not self.role_id and not self.role:
             raise ValueError("Either role or role_id is required")
+        if self.company_id is None:
+            raise ValueError("companyId is required — assign the user to a company")
         return self
 
 
@@ -32,6 +38,8 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
     isActive: Optional[bool] = None
     password: Optional[str] = Field(default=None, min_length=6)
+    company_id: Optional[int] = None
+    companyId: Optional[str] = None
 
     @model_validator(mode="after")
     def normalize(self):
@@ -39,6 +47,8 @@ class UserUpdate(BaseModel):
             self.full_name = self.name
         if self.isActive is not None:
             self.is_active = self.isActive
+        if self.companyId is not None and self.company_id is None:
+            self.company_id = int(self.companyId)
         return self
 
 
@@ -53,9 +63,13 @@ class UserResponse(BaseModel):
     role: str
     isActive: bool
     companyId: Optional[str] = None
+    companyName: Optional[str] = None
 
 
 def user_to_response(user) -> UserResponse:
+    company_name = None
+    if getattr(user, "company", None) is not None:
+        company_name = user.company.name
     return UserResponse(
         id=str(user.id),
         email=user.email,
@@ -63,4 +77,5 @@ def user_to_response(user) -> UserResponse:
         role=user.role.name if user.role else "",
         isActive=bool(user.is_active),
         companyId=str(user.company_id) if user.company_id is not None else None,
+        companyName=company_name,
     )

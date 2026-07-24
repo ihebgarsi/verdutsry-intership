@@ -74,6 +74,7 @@ export type ApiUser = {
   role: Role;
   isActive: boolean;
   companyId?: string;
+  companyName?: string;
 };
 
 export type LoginResponse = {
@@ -86,27 +87,16 @@ export type LoginResponse = {
     role: string;
     isActive?: boolean;
     companyId?: string;
+    companyName?: string;
   };
 };
 
-export type SignupPayload = {
-  companyName: string;
+export type ApiCompany = {
+  id: string;
+  name: string;
   sector: string;
   country: string;
-  adminName: string;
-  email: string;
-  password: string;
-};
-
-export type SignupResponse = {
-  company: {
-    id: string;
-    name: string;
-    sector: string;
-    country: string;
-    createdAt?: string;
-  };
-  user: ApiUser;
+  createdAt?: string;
 };
 
 export type CreateUserPayload = {
@@ -114,6 +104,7 @@ export type CreateUserPayload = {
   name: string;
   role: Role;
   password: string;
+  companyId: string;
   isActive?: boolean;
 };
 
@@ -123,6 +114,19 @@ export type UpdateUserPayload = {
   role?: Role;
   password?: string;
   isActive?: boolean;
+  companyId?: string;
+};
+
+export type CreateCompanyPayload = {
+  name: string;
+  sector: string;
+  country: string;
+};
+
+export type UpdateCompanyPayload = {
+  name?: string;
+  sector?: string;
+  country?: string;
 };
 
 /* ---------- Auth ---------- */
@@ -137,12 +141,12 @@ export async function loginWithApi(
   });
 }
 
-export async function signupWithApi(
-  payload: SignupPayload,
-): Promise<SignupResponse> {
-  return apiFetch<SignupResponse>("/auth/signup", {
+export async function loginWithGoogleApi(
+  idToken: string,
+): Promise<LoginResponse> {
+  return apiFetch<LoginResponse>("/auth/google", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify({ id_token: idToken }),
   });
 }
 
@@ -150,10 +154,53 @@ export async function fetchMe(token: string): Promise<ApiUser> {
   return apiFetch<ApiUser>("/auth/me", { token });
 }
 
-/* ---------- Users (Admin) ---------- */
+/* ---------- Companies (Platform Admin) ---------- */
 
-export async function fetchUsers(token: string): Promise<ApiUser[]> {
-  return apiFetch<ApiUser[]>("/users", { token });
+export async function fetchCompanies(token: string): Promise<ApiCompany[]> {
+  return apiFetch<ApiCompany[]>("/companies", { token });
+}
+
+export async function createCompanyApi(
+  token: string,
+  payload: CreateCompanyPayload,
+): Promise<ApiCompany> {
+  return apiFetch<ApiCompany>("/companies", {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateCompanyApi(
+  token: string,
+  id: string,
+  payload: UpdateCompanyPayload,
+): Promise<ApiCompany> {
+  return apiFetch<ApiCompany>(`/companies/${id}`, {
+    method: "PUT",
+    token,
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function deleteCompanyApi(
+  token: string,
+  id: string,
+): Promise<void> {
+  await apiFetch<void>(`/companies/${id}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+/* ---------- Users (Platform Admin) ---------- */
+
+export async function fetchUsers(
+  token: string,
+  companyId?: string,
+): Promise<ApiUser[]> {
+  const qs = companyId ? `?companyId=${encodeURIComponent(companyId)}` : "";
+  return apiFetch<ApiUser[]>(`/users${qs}`, { token });
 }
 
 export async function createUserApi(
@@ -168,6 +215,7 @@ export async function createUserApi(
       name: payload.name,
       role: payload.role,
       password: payload.password,
+      companyId: payload.companyId,
       isActive: payload.isActive ?? true,
     }),
   });
@@ -187,6 +235,7 @@ export async function updateUserApi(
       ...(payload.role !== undefined ? { role: payload.role } : {}),
       ...(payload.password ? { password: payload.password } : {}),
       ...(payload.isActive !== undefined ? { isActive: payload.isActive } : {}),
+      ...(payload.companyId !== undefined ? { companyId: payload.companyId } : {}),
     }),
   });
 }
